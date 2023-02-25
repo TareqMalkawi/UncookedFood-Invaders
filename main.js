@@ -19,9 +19,9 @@ scoreText.innerHTML = "SCORE: " + 0
 let uncookedFoodContainers = document.getElementsByClassName("uncookedFoodContainer")
 let obstacleContainers = document.getElementsByClassName("obstacle")
 
-let gameisPaused = true
+let gameIsPaused = true
 let restartGame = false
-let isShooting = false
+let canShoot = true
 
 let score = 0
 const row = 4
@@ -32,9 +32,9 @@ let width = "54px"
 let height = "54px"
 
 let updateTimer
-let shootTimer
 let restartTimer
 let obstacleTimer
+let coolDownTimer
 let recreateObstaclesTimer
 
 let dist = 0
@@ -47,11 +47,11 @@ let moveRight = 0
 let obstacleTopPos
 
 const uncookedFoodList = ["beet", "carrot", "cheese", "chicken",
-    "egg", "eggplanet", "meat", "mushrom",
+    "egg", "eggplant", "meat", "mushroom",
     "pepper", "potato", "sausage"]
 
 const uncookedFoodImages = []
-const uncookedFoodxpTexts = []
+const uncookedFoodXpTexts = []
 
 let topParent = document.createElement("div")
 let airplane = document.createElement("div")
@@ -83,7 +83,7 @@ function CreateUncookedFood(name, width, height) {
     container.appendChild(xpText)
     subCanvas.appendChild(container)
     uncookedFoodImages.push(image)
-    uncookedFoodxpTexts.push(xpText)
+    uncookedFoodXpTexts.push(xpText)
     return container
 }
 
@@ -100,7 +100,7 @@ function LevelHandler() {
                     width = "54px"
                     height = "64px"
                     break
-                case "eggplanet":
+                case "eggplant":
                     width = "54px"
                     height = "64px"
                     break
@@ -140,7 +140,7 @@ function Airplane() {
     topParent.style.position = "relative"
     topParent.style.right = 0 + "px"
     topParent.style.top = 0 + "px"
-    topParent.style.zIndex = 1
+    topParent.style.zIndex = "1"
     topParent.classList.add("top-parent")
 
     airplaneImage.src = "Game Assets/airplane.png"
@@ -215,25 +215,25 @@ document.addEventListener('keydown', event => {
         moveRight = -1
     }
     if (event.code === "Space") {
-        moveRight = 0
-        Shoot()
+        // moveRight = 0 , keep , if plane should stop when shooting.
+            Shoot()
     }
     if (event.key === "Enter"){
         LevelHandler()
         Update()
-        gameisPaused = false
+        gameIsPaused = false
     }
     if (event.key === "r" && restartGame === false) {
-        if(gameisPaused === true)
-            gameisPaused = false
+        if(gameIsPaused === true)
+            gameIsPaused = false
         restartGame = true
     }
 })
 
 function Update() {
     updateTimer = setInterval(() => {
-        if (gameisPaused === true) {
-            if(airplane.style.opacity == "0")
+        if (gameIsPaused === true) {
+            if(airplane.style.opacity === "0")
                 instructionPanel.style.display = "none"
             else   
                 instructionPanel.style.display = "block"
@@ -244,7 +244,7 @@ function Update() {
 
             const knifes = document.getElementsByClassName("knife")
             // handle movement
-            if (moveRight == 1) {
+            if (moveRight === 1) {
                 airplaneMoveRight = parseInt(airplane.style.right)
                 airplaneMoveRight -= 5
                 airplane.style.right = airplaneMoveRight + "px"
@@ -253,7 +253,7 @@ function Update() {
                     airplane.style.right = -600 + "px"
                 }
 
-            } else if (moveRight == -1) {
+            } else if (moveRight === -1) {
                 airplaneMoveRight = parseInt(airplane.style.right)
                 airplaneMoveRight += 5
                 airplane.style.right = airplaneMoveRight + "px"
@@ -282,7 +282,6 @@ function Update() {
 
                     // handle collision
                     for (let j = uncookedFoodImages.length - 1; j >= 0; j--) {
-
                         dist = Math.sqrt(Math.pow(knifes[i].getBoundingClientRect().x -
                             uncookedFoodImages[j].getBoundingClientRect().x, 2) +
                             Math.pow(knifes[i].getBoundingClientRect().y -
@@ -312,7 +311,7 @@ function Update() {
                     for (let i = 0; i < uncookedFoodContainers.length; i++) {
                         uncookedFoodContainers[i].remove()
                     }
-                    if (uncookedFoodContainers.length == 0) {
+                    if (uncookedFoodContainers.length === 0) {
                         LevelHandler()
                         clearInterval(restartTimer)
                     }
@@ -346,11 +345,11 @@ function Update() {
                     obstacleContainers[i].getBoundingClientRect().y, 2))
 
 
-                if (obstacleDist < 34 && airplane.style.opacity != "0") {
+                if (obstacleDist < 34 && airplane.style.opacity !== "0") {
                     airplane.style.opacity = "0"
                     lostInstructionPanel.style.display = "block"
                     restartGame = false
-                    gameisPaused = true
+                    gameIsPaused = true
                     break
                 }
 
@@ -371,21 +370,33 @@ function Update() {
 
 function FadeOutAnimation(index) {
     let fadeOutTimer = setInterval(() => {
-        uncookedFoodxpTexts[index].style.display = "block"
-        let xpTextTop = parseInt(uncookedFoodxpTexts[index].style.top)
+        uncookedFoodXpTexts[index].style.display = "block"
+        let xpTextTop = parseInt(uncookedFoodXpTexts[index].style.top)
         xpTextTop -= 1
-        uncookedFoodxpTexts[index].style.top = xpTextTop + "px"
-        uncookedFoodxpTexts[index].style.opacity = "0.5"
+        uncookedFoodXpTexts[index].style.top = xpTextTop + "px"
+        uncookedFoodXpTexts[index].style.opacity = "0.5"
 
-        if (xpTextTop == -30) {
-            uncookedFoodxpTexts[index].style.display = "none"
+        if (xpTextTop === -30) {
+            uncookedFoodXpTexts[index].style.display = "none"
             clearInterval(fadeOutTimer)
         }
     }, 50)
 }
 
 function Shoot() {
-    if (gameisPaused === false)
-        Knife()
+    if (gameIsPaused === false)
+    {
+        if(canShoot)
+        {
+            canShoot = false
+            clearTimeout(coolDownTimer)
+            Knife()
+        }
+
+        coolDownTimer = setTimeout(()=>
+        {
+           canShoot = true;
+        },1000)
+    }
 }
 
